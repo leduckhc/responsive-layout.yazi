@@ -15,31 +15,52 @@ sizes are welcome — bug reports, ideas, docs, and code.
    ```lua
    require("responsive-layout"):setup { wide_min = 90 }
    ```
-4. Open yazi and resize your terminal to test both wide and narrow modes.
+4. Launch `yazi` and resize your terminal across the `wide_min` threshold to see
+   the layout switch.
 
-## Testing
+## Development notes
 
-- **Wide mode** (≥ 90 cols): parent + current + preview side by side
-- **Narrow mode** (< 90 cols): current (top) + preview (bottom) stacked vertically
-- Verify the divider renders correctly (horizontal line between panes)
-- Test with `toggle-pane` plugin: `T` to hide/show preview, `Ctrl-t` to maximize
+- The whole plugin is a single `main.lua` that overrides `Tab:layout()` and
+  `Tab:build()`. Keep it dependency-free and small.
+- Custom UI components **must** carry an `_id` field, or Yazi silently fails to
+  redraw the region (renders blank). Mirror the shape of the built-in `Rail` /
+  `Marker` components: `_id`, `new`, `reflow`, `redraw`, and no-op `click` /
+  `scroll` / `touch` / `drag`.
+- In wide mode, read the layout from `rt.mgr.ratio` (support both the array form
+  `{a,b,c}` and the struct form `.parent/.current/.preview`) so
+  [`toggle-pane.yazi`](https://github.com/yazi-rs/plugins/tree/main/toggle-pane.yazi)
+  stays compatible.
+- For vertical splits, compute `ui.Rect` values directly — `Constraint.Fill`
+  has produced blank panes in testing.
 
-## Gotchas
+## Testing your change
 
-- The plugin reads `rt.mgr.ratio` at layout time, so it respects runtime changes from `toggle-pane`
-- Custom components need `_id` field or Yazi silently skips them
-- Use `ui.Bar` and `ui.Line` carefully — test both redraw and error logs (`~/.local/state/yazi/yazi.log`)
+There's no unit-test harness for a TUI layout plugin, so verify manually:
 
-## Code style
+1. `luacheck main.lua` or at least `luac -p main.lua` for syntax.
+2. Run `yazi` at a **wide** width (≥ `wide_min`): confirm 3 panes render.
+3. Run at a **narrow** width (< `wide_min`): confirm current + preview stack with
+   a divider and no stray vertical rail.
+4. In wide mode, confirm `toggle-pane` (if installed) still hides/maximizes panes.
+5. Check `~/.local/state/yazi/yazi.log` (run with `YAZI_LOG=debug yazi`) — there
+   should be **no** redraw errors.
 
-- Lua 5.4+ (Yazi's embedded runtime)
-- Comment complex logic
-- Keep component classes simple and stateless where possible
+## Pull requests
 
-## Reporting issues
+- Keep PRs focused; one change per PR.
+- Update `README.md` and `CHANGELOG.md` when behavior or options change.
+- Describe how you tested (widths, terminal, Yazi version).
 
-Include:
-- Terminal width / height
-- Yazi version (`yazi --version`)
-- Exact steps to reproduce
-- Screenshot or GIF if relevant
+## Reporting bugs
+
+Open an issue with:
+
+- Yazi version (`yazi --version`) and OS/terminal.
+- Your `setup { ... }` options.
+- What you saw vs. what you expected (a screenshot helps).
+- Any relevant lines from `~/.local/state/yazi/yazi.log`.
+
+## License
+
+By contributing, you agree that your contributions are licensed under the
+[MIT License](LICENSE).
