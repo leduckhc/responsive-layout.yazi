@@ -19,17 +19,46 @@ Yazi's default layout is three panes side-by-side: **parent │ current │ prev
 
 This plugin fixes that automatically. Resize your terminal and the layout **flips live**:
 
+### Wide Mode (≥ 90 columns)
+
 ```
-        WIDE  (≥ wide_min cols)                 NARROW  (< wide_min cols)
- ┌────────┬───────────┬────────────┐          ┌────────────────────────┐
- │ parent │  current  │  preview   │          │        current         │
- │        │           │            │          │                        │
- │  src/  │  main.lua │  -- code   │          │  main.lua              │
- │  docs/ │  init.lua │  -- here   │          │  init.lua              │
- │        │           │            │          ├────────────────────────┤ ← divider
- │        │           │            │          │        preview         │
- │        │           │            │          │  -- code preview here  │
- └────────┴───────────┴────────────┘          └────────────────────────┘
+~/project        │ CURRENT FILE      │ PREVIEW
+ 📁 src          │  📄 main.lua      │ ──────────────────────────────
+ 📁 tests        │  ✏️  Modified      │ function setup(self, opts)
+ 📄 README.md    │  ✓  In git        │   local w = self._area.w
+ 📄 LICENSE      │                   │   if w >= WIDE_MIN then
+ 📄 init.lua     │                   │     -- honor 3-pane layout
+                 │                   │   else
+                 │                   │     -- stack vertically
+                 │                   │   end
+                 │                   │ end
+                 │                   │ ──────────────────────────────
+                 │                   │ 47% │ 14.0 KiB
+```
+
+### Narrow Mode (< 90 columns)
+
+```
+~/project
+ 📁 src
+ 📁 tests
+ 📄 README.md
+ 📄 LICENSE
+ 📄 init.lua
+
+ 8% │ 0 B
+──────────────────────────────
+
+function setup(self, opts)
+  local w = self._area.w
+  if w >= WIDE_MIN then
+    -- honor 3-pane layout
+  else
+    -- stack vertically
+  end
+end
+──────────────────────────────
+47% │ 14.0 KiB
 ```
 
 No keybinding to remember, no mode to toggle. It just adapts.
